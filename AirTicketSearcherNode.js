@@ -4,12 +4,6 @@ var logger = require('./Logger')
 var config = JSON.parse(fs.readFileSync('./config.json','utf8'));
 
 (async() => {
-    // const myFormat = printf(({ level, timestamp, message  }) => {
-    //     return `${level} ${timestamp} : ${message}`;
-    // });
-
-    
-
     try{
        
 
