@@ -1,5 +1,6 @@
 'use strict';
 const moment = require('moment')
+const path = require('path');
 
 exports.Search = async function(logger, config, browser)
 {
@@ -55,9 +56,11 @@ async function ProcessUrls(config, logger, browser, listUrls)
         logger.debug("for loop");
         try{
             logger.debug(url);
+
             page = await browser.newPage()
             await page.setViewport({ width: 960, height: 926 });
             await page.goto(url);
+
             await page.waitForXPath("//Button[contains(div,'Load More')]");
             //await page.WaitForXPath("//[contains(div,'Journey-overview Journey-return')]");
 
@@ -68,12 +71,11 @@ async function ProcessUrls(config, logger, browser, listUrls)
                 } 
             });
 
-
         }
         catch(error)
         {
             logger.debug(error.stack);
-            await page.screenshot({ path: path.join(__dirname, '.\\logs\\kiwi-' + moment().format("YYYY-MM-DD_HH-mm-ss") + '.jpg') });
+            await page.screenshot({ path: path.join(process.cwd(), './logs/kiwi-' + moment().format("YYYY-MM-DD_HH-mm-ss") + '.jpg') });
         }
         finally
         {
