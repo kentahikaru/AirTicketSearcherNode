@@ -1,7 +1,13 @@
 {
-    "kayak" : {
-        "neco" : "1",
-        "neco2" : "2",
-        "pole" : ["1","2"]
+    "headless": false,
+    "chromePath": "/usr/bin/chromium",
+    "monthsToLookFor": 2,
+    "maxPrice": 14000,
+    "kiwi" : {
+        "origin" : "prague-czechia",
+        "destinations" : "tokyo-japan,kansai-international-osaka-japan,fukuoka-fukuoka-japan",
+        "numberOfNights": "12-16",
+        "emailSubject": "Kiwi - Japan"
     }
+
 }
