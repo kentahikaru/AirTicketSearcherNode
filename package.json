@@ -10,9 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "fs": "0.0.1-security",
+    "mailkit": "^0.1.6",
     "moment": "^2.24.0",
     "path": "^0.12.7",
     "puppeteer": "^1.19.0",
+    "table": "^5.4.5",
+    "table-builder": "^2.1.1",
     "tracer": "^1.0.0",
     "winston": "^3.2.1"
   }

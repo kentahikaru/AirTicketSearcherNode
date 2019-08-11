@@ -1,6 +1,10 @@
 'use strict';
-const moment = require('moment')
+const moment = require('moment');
 const path = require('path');
+const table = require('table');
+//import tableBuilder from 'table-builder';
+//const table_builder = require('table-builder');
+//var mailkit = require('mailkit');
 
 exports.Search = async function(logger, config, browser)
 {
@@ -53,7 +57,6 @@ async function ProcessUrls(config, logger, browser, listUrls)
     //await listOfResults.forEach(async (url, index) => {
     for(var url of listUrls) 
     {
-        logger.debug("for loop");
         try{
             logger.debug(url);
 
@@ -71,6 +74,8 @@ async function ProcessUrls(config, logger, browser, listUrls)
                 } 
             });
 
+            await ScrapePage(logger, page);
+
         }
         catch(error)
         {
@@ -86,4 +91,45 @@ async function ProcessUrls(config, logger, browser, listUrls)
         }
 
     }
+}
+
+async function ScrapePage(logger, page)
+{
+    try
+    {
+        const elements = await page.$x('.//div[contains(@class,"Journey clear spCard open")]')
+
+        if(elements.length == 0)
+        {
+            throw new Error('No nodes to analyze');
+        }
+
+        for(let element of elements)
+        {
+            try
+            {
+                var subnodes = await element.$x('.//div[@class="TripInfo _results"]');
+                var toDestination = subnodes[0];
+                var fromDestination = subnodes[1];
+
+                var results = {};
+                var priceElement = await element.$x('.//div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
+                
+                var neco = await priceElement[0].getProperty('textContent');
+                var price = await neco.jsonValue();
+                logger.debug(price);
+           
+
+            }
+            catch(error)
+            {
+                logger.debug(error.stack);
+            }
+        }
+    }
+    catch(error)
+    {
+        logger.debug('No elements on page.')
+    }
+
 }
