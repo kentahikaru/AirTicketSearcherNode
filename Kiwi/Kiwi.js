@@ -74,7 +74,7 @@ async function ProcessUrls(config, logger, browser, listUrls)
                 } 
             });
 
-            await ScrapePage(logger, page);
+            await ScrapePage(config, logger, page);
 
         }
         catch(error)
@@ -93,7 +93,7 @@ async function ProcessUrls(config, logger, browser, listUrls)
     }
 }
 
-async function ScrapePage(logger, page)
+async function ScrapePage(config, logger, page)
 {
     try
     {
@@ -113,11 +113,28 @@ async function ScrapePage(logger, page)
                 var fromDestination = subnodes[1];
 
                 var results = {};
-                var priceElement = await element.$x('.//div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
-                
-                var neco = await priceElement[0].getProperty('textContent');
-                var price = await neco.jsonValue();
-                logger.debug(price);
+
+                // var priceElement = await element.$x('.//div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
+                // var priceTextContext = await priceElement[0].getProperty('textContent');
+                // var price = await priceTextContext.jsonValue();
+
+                var price = await GetTextContext(element, './/div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
+                price = price.toString().split(" ")[0].replace(",",".").replace(".","");
+
+                if(price > config.maxPrice)
+                {
+                    continue;
+                }
+
+                results.price = price;
+
+                // var tmp1 = await element.$x('.//div[@class="Journey-nights-place"]');
+                // var tmp2 = await tmp1[0].getProperty('textContent');
+                // results.lengthOfStay = await tmp2.jsonValue();
+                results.lengthOfStay = await GetTextContext(element, './/div[@class="Journey-nights-place"]')
+
+                logger.debug(results.price + "    " + results.lengthOfStay);
+
            
 
             }
@@ -132,4 +149,11 @@ async function ScrapePage(logger, page)
         logger.debug('No elements on page.')
     }
 
+}
+
+async function GetTextContext(element, xpath)
+{
+    var xPathElement = await element.$x(xpath);
+    var xPathElementTextContent = await xPathElement[0].getProperty('textContent');
+    return await xPathElementTextContent.jsonValue();
 }
