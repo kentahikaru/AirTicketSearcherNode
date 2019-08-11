@@ -95,6 +95,7 @@ async function ProcessUrls(config, logger, browser, listUrls)
 
 async function ScrapePage(config, logger, page)
 {
+    var listResults = [];
     try
     {
         const elements = await page.$x('.//div[contains(@class,"Journey clear spCard open")]')
@@ -114,11 +115,7 @@ async function ScrapePage(config, logger, page)
 
                 var results = {};
 
-                // var priceElement = await element.$x('.//div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
-                // var priceTextContext = await priceElement[0].getProperty('textContent');
-                // var price = await priceTextContext.jsonValue();
-
-                var price = await GetTextContext(element, './/div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
+                var price = await GetTextContent(logger, element, './/div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
                 price = price.toString().split(" ")[0].replace(",",".").replace(".","");
 
                 if(price > config.maxPrice)
@@ -128,15 +125,23 @@ async function ScrapePage(config, logger, page)
 
                 results.price = price;
 
-                // var tmp1 = await element.$x('.//div[@class="Journey-nights-place"]');
-                // var tmp2 = await tmp1[0].getProperty('textContent');
-                // results.lengthOfStay = await tmp2.jsonValue();
-                results.lengthOfStay = await GetTextContext(element, './/div[@class="Journey-nights-place"]')
+                results.lengthOfStay = await GetTextContent(logger, element, './/div[@class="Journey-nights-place"]');
 
-                logger.debug(results.price + "    " + results.lengthOfStay);
+                results.airlinesToDestination = await GetTextContent(logger, toDestination, ".//div[@class='AirlineNames']");
+                results.airlinesFromDestination = await GetTextContent(logger, fromDestination, ".//div[@class='AirlineNames']");
 
+                results.durationToDestination = await GetTextContent(logger, toDestination, ".//div[@class='TripInfoField-flight-duration']");
+                results.durationFromDestination = await GetTextContent(logger, fromDestination, ".//div[@class='TripInfoField-flight-duration']");
+                
+                results.departureDate = await GetTextContent(logger, toDestination, ".//div[@class='TripInfoField-date']");
+                results.returnDate = await GetTextContent(logger, fromDestination, ".//div[@class='TripInfoField-date']");
            
+                results.departureTime = await GetTextContent(logger, toDestination, ".//div[@class='TripInfoField-time']");
+                results.returnTime = await GetTextContent(logger, fromDestination, ".//div[@class='TripInfoField-date']");
 
+                results.bookingLink = await GetContent(logger, element, ".//div[@class='JourneyBookingButtonLink']/a", "href");
+
+                listResults.push(results);
             }
             catch(error)
             {
@@ -151,9 +156,32 @@ async function ScrapePage(config, logger, page)
 
 }
 
-async function GetTextContext(element, xpath)
+async function GetTextContent(logger, element, xpath)
 {
-    var xPathElement = await element.$x(xpath);
-    var xPathElementTextContent = await xPathElement[0].getProperty('textContent');
-    return await xPathElementTextContent.jsonValue();
+    try
+    {
+        var xPathElement = await element.$x(xpath);
+        var xPathElementTextContent = await xPathElement[0].getProperty('textContent');
+        return await xPathElementTextContent.jsonValue();
+    }
+    catch(error)
+    {
+        logger.debug(error.stack);
+        return "";
+    }
+}
+
+async function GetContent(logger, element, xpath, content)
+{
+    try
+    {
+        var xPathElement = await element.$x(xpath);
+        var xPathElementTextContent = await xPathElement[0].getProperty(content);
+        return await xPathElementTextContent.jsonValue();
+    }
+    catch(error)
+    {
+        logger.debug(error.stack);
+        return "";
+    }
 }
