@@ -1,7 +1,7 @@
 {
     "headless": false,
     "chromePath": "/usr/bin/chromium",
-    "monthsToLookFor": 2,
+    "monthsToLookFor": 1,
     "maxPrice": 14000,
     "kiwi" : {
         "origin" : "prague-czechia",

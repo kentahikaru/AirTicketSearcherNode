@@ -1,16 +1,15 @@
 'use strict';
 const moment = require('moment');
 const path = require('path');
-const table = require('table');
-//import tableBuilder from 'table-builder';
-//const table_builder = require('table-builder');
-//var mailkit = require('mailkit');
+const tableBuilder = require('table-builder');
+var mail = require('../Mail');
 
 exports.Search = async function(logger, config, browser)
 {
     var listUrls = MakeUrlList(config, logger);
-    await ProcessUrls(config, logger, browser, listUrls);
-
+    var listResults = await ProcessUrls(config, logger, browser, listUrls);
+    var resultTable = PrepareResults(config, logger, listResults);
+    mail.SendMail(logger, config.kiwi.emailSubject, resultTable);
 }
 
 function MakeUrlList(config, logger)
@@ -74,7 +73,7 @@ async function ProcessUrls(config, logger, browser, listUrls)
                 } 
             });
 
-            await ScrapePage(config, logger, page);
+            listOfResults = await ScrapePage(config, logger, page);
 
         }
         catch(error)
@@ -91,6 +90,8 @@ async function ProcessUrls(config, logger, browser, listUrls)
         }
 
     }
+
+    return listOfResults;
 }
 
 async function ScrapePage(config, logger, page)
@@ -154,6 +155,7 @@ async function ScrapePage(config, logger, page)
         logger.debug('No elements on page.')
     }
 
+    return listResults;
 }
 
 async function GetTextContent(logger, element, xpath)
@@ -184,4 +186,13 @@ async function GetContent(logger, element, xpath, content)
         logger.debug(error.stack);
         return "";
     }
+}
+
+function PrepareResults(config, logger, listResults)
+{
+    var headers = {"price": "Price", "lengthOfStay" : "Length of stay", "airlinesToDestination" : "Airlines to destination", "airlinesFromDestination": "Airlines from destination",
+        "durationToDestination": "Duration to destination", "durationFromDestination": "Duration from destination", "departureDate":"Departure date", "returnDate" : "Return Date",
+        "departureTime":"Departure time","returnTime":"Return time","bookingLink":"Booking link"};
+
+    return (new tableBuilder({'class': 'Kiwi table'})).setHeaders(headers).setData(listResults).render();
 }
