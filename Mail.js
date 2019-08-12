@@ -1,36 +1,42 @@
 const fs = require('fs');
 var emailConfig = JSON.parse(fs.readFileSync('./emailConfig.json','utf8'));
-var mailkit = require('mailkit');
+var nodemailer = require('nodemailer');
 
 exports.SendMail = async function(logger, subject, message)
 {
-   var mailOptions = {
-       from: emailConfig.fromAddress,
-       to: emailConfig.toAddress,
-       subject: subject,
-       body: message,
-       smtp: {
-           host: emailConfig.smtpServer,
-           port: emailConfig.port,
-           secureConnection: true,
-           auth:
-           {
-               user: emailConfig.username,
-               pass: emailConfig.password
-           },
-           debug: true
-       }
-   };
+    try{
+       
+        let transporter =  await nodemailer.createTransport({
+            host: emailConfig.smtpServer,
+            port: emailConfig.port,
+            secure:true,
+            auth: {
+                user: emailConfig.username,
+                pass: emailConfig.password
+            },
+            tls: {
+                rejectUnauthorized: false
+            },
+            // logger: true,
+            // debug: true
+        });
 
-   mailkit.send(mailOptions,function(error,status){
-       if(error)
-       {
-           logger.debug(error.stack);
-       }
-       else
-       {
-           logger.debug(status);
-       }
-   });
+        await transporter.sendMail({
+            from: emailConfig.fromAddress,
+            to: emailConfig.toAddress,
+            subject, subject,
+            html: message
+        }, function(error, info) {
+            if (error) {
+              logger.debug(error)
+            } else {
+              logger.debug("mail sent");
+            }
+        });
 
+    }
+    catch(error)
+    {
+        logger.debug(error.stack);
+    }
 }

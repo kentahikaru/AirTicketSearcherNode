@@ -7,10 +7,11 @@ var mail = require('../Mail');
 exports.Search = async function(logger, config, browser)
 {
     var listUrls = MakeUrlList(config, logger);
-    var listResults = await ProcessUrls(config, logger, browser, listUrls);
-    var resultTable = PrepareResults(config, logger, listResults);
-    mail.SendMail(logger, config.kiwi.emailSubject, resultTable);
-}
+    var listResults = await ProcessUrls(config, logger, browser, listUrls).then(function(listResults) {
+        var resultTable = PrepareResults(config, logger, listResults);
+        mail.SendMail(logger, config.kiwi.emailSubject, resultTable);
+    });
+    }
 
 function MakeUrlList(config, logger)
 {
@@ -73,7 +74,8 @@ async function ProcessUrls(config, logger, browser, listUrls)
                 } 
             });
 
-            listOfResults = await ScrapePage(config, logger, page);
+            var scrapedResults = await ScrapePage(config, logger, page);
+            listOfResults.push(scrapedResults);
 
         }
         catch(error)
@@ -190,9 +192,24 @@ async function GetContent(logger, element, xpath, content)
 
 function PrepareResults(config, logger, listResults)
 {
-    var headers = {"price": "Price", "lengthOfStay" : "Length of stay", "airlinesToDestination" : "Airlines to destination", "airlinesFromDestination": "Airlines from destination",
+    var tables = "";
+    try{
+        var headers = {"price": "Price", "lengthOfStay" : "Length of stay", "airlinesToDestination" : "Airlines to destination", "airlinesFromDestination": "Airlines from destination",
         "durationToDestination": "Duration to destination", "durationFromDestination": "Duration from destination", "departureDate":"Departure date", "returnDate" : "Return Date",
         "departureTime":"Departure time","returnTime":"Return time","bookingLink":"Booking link"};
 
-    return (new tableBuilder({'class': 'Kiwi table'})).setHeaders(headers).setData(listResults).render();
+        for(var resultList of listResults)
+        {
+            tables = tables + (new tableBuilder({'border':'1'})).setHeaders(headers).setData(resultList).render();
+            tables = tables + "</br> </br>"
+
+        }
+    }
+    catch(error)
+    {
+        logger.debug(error.stack);
+    }
+
+
+    return tables;
 }
