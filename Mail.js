@@ -2,11 +2,12 @@ const fs = require('fs');
 var emailConfig = JSON.parse(fs.readFileSync('./emailConfig.json','utf8'));
 var nodemailer = require('nodemailer');
 
-exports.SendMail = async function(logger, subject, message)
+exports.SendMail = function(logger, subject, message)
 {
     try{
        
-        let transporter =  await nodemailer.createTransport({
+        let transporter =  nodemailer.createTransport({
+            pool: true,
             host: emailConfig.smtpServer,
             port: emailConfig.port,
             secure:true,
@@ -21,7 +22,7 @@ exports.SendMail = async function(logger, subject, message)
             // debug: true
         });
 
-        await transporter.sendMail({
+        transporter.sendMail({
             from: emailConfig.fromAddress,
             to: emailConfig.toAddress,
             subject, subject,

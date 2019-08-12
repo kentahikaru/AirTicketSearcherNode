@@ -10,6 +10,7 @@ exports.Search = async function(logger, config, browser)
     var listResults = await ProcessUrls(config, logger, browser, listUrls).then(function(listResults) {
         var resultTable = PrepareResults(config, logger, listResults);
         mail.SendMail(logger, config.kiwi.emailSubject, resultTable);
+        //logger.debug(resultTable);
     });
     }
 
