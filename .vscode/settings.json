@@ -1,0 +1,30 @@
+{
+    "deploy.reloaded": {
+        "packages": [
+            {
+                "name": "Version 2.3.4",
+                "description": "AirTicketSearcherNode",
+                "files": [
+                    "**/*.js",
+                    "/*.json",
+                    "logs"
+                ],
+                "exclude": [
+                    "node_modules/**",
+                    ".vscode",
+                    ".gitignore",
+                    "publish/**"
+                ]
+            },
+        ],
+        "targets": [
+            {
+                "type": "local",
+                "name": "My local folder",
+                "description": "A local folder",
+
+                "dir": "/mnt/orage/Programming/AirTicketSearcherNode/publish"
+            }
+        ]
+    }
+}

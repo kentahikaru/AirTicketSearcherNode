@@ -4,6 +4,7 @@ const puppeteer = require('puppeteer');
 var logger = require('./Logger')
 var config = JSON.parse(fs.readFileSync('./config.json','utf8'));
 const kiwi = require('./Kiwi/Kiwi');
+const pelikan = require('./Pelikan/Pelikan');
 
 (async() => {
 
@@ -11,7 +12,8 @@ const kiwi = require('./Kiwi/Kiwi');
     try{
         
         const browser = await puppeteer.launch({headless: config.headless, executablePath: config.chromePath});
-        await kiwi.Search(logger, config, browser)
+        //await kiwi.Search(logger, config, browser)
+        await pelikan.Search(logger, config, browser)
 
 
         await browser.close();

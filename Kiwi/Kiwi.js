@@ -3,19 +3,21 @@ const moment = require('moment');
 const path = require('path');
 const tableBuilder = require('table-builder');
 var mail = require('../Mail');
+const { exec } = require('child_process');
 
 exports.Search = async function(logger, config, browser)
 {
+    logger.debug("Kiwi search");
     var listUrls = MakeUrlList(config, logger);
     var listResults = await ProcessUrls(config, logger, browser, listUrls).then(function(listResults) {
         var resultTable = PrepareResults(config, logger, listResults);
         mail.SendMail(logger, config.kiwi.emailSubject, resultTable);
-        //logger.debug(resultTable);
     });
-    }
+}
 
 function MakeUrlList(config, logger)
 {
+    logger.debug("MakeUrlList");
     var startDate = moment().startOf('month').add(1, 'M');
     var maxDate = moment().startOf('month').add(1, 'M').add(config.monthsToLookFor, 'M');
     var currentDate = startDate;
@@ -52,6 +54,7 @@ function GetStartEndMonth(currentDate)
 
 async function ProcessUrls(config, logger, browser, listUrls)
 {
+    logger.debug("ProcessUrls");
     var listOfResults = []
     var page;
 
@@ -60,7 +63,9 @@ async function ProcessUrls(config, logger, browser, listUrls)
     {
         try{
             logger.debug(url);
-
+            // showMemory(logger);
+            
+            
             page = await browser.newPage()
             await page.setViewport({ width: 960, height: 926 });
             await page.goto(url);
@@ -94,11 +99,15 @@ async function ProcessUrls(config, logger, browser, listUrls)
 
     }
 
+    page = null;
     return listOfResults;
 }
 
 async function ScrapePage(config, logger, page)
 {
+    logger.debug("ScrapePage");
+//   showMemory(logger);
+
     var listResults = [];
     try
     {
@@ -193,6 +202,7 @@ async function GetContent(logger, element, xpath, content)
 
 function PrepareResults(config, logger, listResults)
 {
+    logger.debug("PrepareResults");
     var tables = "";
     try{
         var headers = {"price": "Price", "lengthOfStay" : "Length of stay", "airlinesToDestination" : "Airlines to destination", "airlinesFromDestination": "Airlines from destination",
@@ -213,4 +223,17 @@ function PrepareResults(config, logger, listResults)
 
 
     return tables;
+}
+
+function showMemory(logger)
+{
+    logger.debug(exec('free', (err, stdout, stderr) => {
+        if (err) {
+          // node couldn't execute the command
+          return;
+        }
+      
+        // the *entire* stdout and stderr (buffered)
+        logger.debug(`stdout: \n${stdout}`);
+      }));
 }
