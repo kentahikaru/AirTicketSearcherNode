@@ -128,7 +128,7 @@ async function ScrapePage(config, logger, page)
 
                 var results = {};
 
-                var price = await GetTextContent(logger, element, './/div[@class="JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2 gnDWaH"]');
+                var price = await GetTextContent(logger, element, './/div[contains(@class,"JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2")]');
                 price = price.toString().split(" ")[0].replace(",",".").replace(".","");
 
                 if(price > config.maxPrice)
@@ -165,6 +165,7 @@ async function ScrapePage(config, logger, page)
     catch(error)
     {
         logger.debug('No elements on page.')
+        await page.screenshot({ path: path.join(process.cwd(), './logs/kiwi-' + moment().format("YYYY-MM-DD_HH-mm-ss") + '.jpg') });
     }
 
     return listResults;
@@ -180,6 +181,7 @@ async function GetTextContent(logger, element, xpath)
     }
     catch(error)
     {
+        logger.debug(xpath);
         logger.debug(error.stack);
         return "";
     }
@@ -195,6 +197,7 @@ async function GetContent(logger, element, xpath, content)
     }
     catch(error)
     {
+        logger.debug(xpath);
         logger.debug(error.stack);
         return "";
     }

@@ -25,14 +25,13 @@ function MakeUrlList(config, logger)
     var listUrls = [];
 
     do{
-        //destinations.forEach(function(destination,index)  {
         for(var destination of destinations)
         {
             var url = CreateUrl(config.pelikan.origin, destination, currentDate.format("YYYY_MM_DD"), GetEndOfStay(currentDate, config.pelikan.numberOfNights))
             listUrls.push(url);
         }
 
-        currentDate.add(360,'d');
+        currentDate.add(6,'d');
     }while(currentDate < maxDate)
 
     return listUrls;
@@ -58,13 +57,11 @@ async function ProcessUrls(config, logger, browser, listUrls)
     var listOfResults = []
     var page;
 
-    //await listOfResults.forEach(async (url, index) => {
     for(var url of listUrls) 
     {
         try{
             logger.debug(url);
             //showMemory(logger);
-            
             
             page = await browser.newPage()
             await page.setViewport({ width: 960, height: 926 });
@@ -114,12 +111,6 @@ async function ScrapePage(config, logger, page)
         {
             try
             {
-                // var subnodes = await element.$x('.//div[@class="TripInfo _results"]');
-                // var toDestination = subnodes[0];
-                // var fromDestination = subnodes[1];
-
-                // var results = {};
-
                 var price = await GetContent(logger, element, ".//div[@class='fly-search-price-info-wrapp']/div[3]", "textContent");
 
                 price = price.toString().replace(/ /gi,'');
@@ -130,15 +121,15 @@ async function ScrapePage(config, logger, page)
                     continue;
                 }
 
-                //results.price = price;
-
                 var subnodesCollection = await element.$x(".//div[@class='row fly-row no-mrg']");
                 
                 for(let subNode of subnodesCollection)
                 {
                     var results = {};
-
+                    
                     results.price = price;
+                    results.baggage = await GetTextContent(logger, subNode, ".//div[@class='fly-item-bottom-info-left-new-reservation']")
+                    results.airline = await GetTextContent(logger, subNode, ".//div[@class='fly-item-bottom-info-right-new-reservation']")
                     results.tolerance = await GetTextContent(logger, subNode, ".//div[@class='fly-item-tolerance-new-reservation']")
                     results.departureDay = await GetTextContent(logger, subNode, ".//span[@class='fly-item-day-new-reservation']");
                     results.departureDate = await GetTextContent(logger, subNode, ".//div[@class='fly-item-one-trip-no-radio-new-reservation']");
@@ -146,7 +137,7 @@ async function ScrapePage(config, logger, page)
                     results.departureCity = await GetTextContent(logger, tmpElement, ".//h1[@class='airport']");
 
                     tmpElement = await GetElement(logger, subNode, ".//div[@class='first-dest-item']");
-                    results.departureTime = await GetTextContent(logger, tmpElement, ".//span[@class='fly-item-time-new-reservation active']");
+                    results.departureTime = await GetTextContent(logger, tmpElement, ".//span[contains(@class,'fly-item-time-new-reservation')]");
                     
                     tmpElement = await GetElement(logger, subNode, ".//div[@class='first-dest-item']");
                     results.departureAirport = await GetTextContent(logger, tmpElement, ".//div[@class='place-define']");
@@ -157,7 +148,7 @@ async function ScrapePage(config, logger, page)
                     results.destinationCity = await GetTextContent(logger, tmpElement, ".//h1[@class='airport']");
 
                     tmpElement = await GetElement(logger, subNode, ".//div[@class='second-dest-item']");
-                    results.destinationTime = await GetTextContent(logger, tmpElement, ".//span[@class='fly-item-time-new-reservation active']");
+                    results.destinationTime = await GetTextContent(logger, tmpElement, ".//span[contains(@class,'fly-item-time-new-reservation')]");
 
                     tmpElement = await GetElement(logger, subNode, ".//div[@class='second-dest-item']");
                     results.destinationAirport = await GetTextContent(logger, tmpElement, ".//div[@class='place-define']");
@@ -166,9 +157,6 @@ async function ScrapePage(config, logger, page)
 
                     listResults.push(results);
                 }
-                
-
-                
             }
             catch(error)
             {
@@ -247,7 +235,7 @@ function PrepareResults(config, logger, listResults)
     logger.debug("PrepareResults");
     var tables = "";
     try{
-        var headers = {"price": "Price", "tolerance" : "Tolerance", "departureDay" : "Departure day", "departureDate": "Departure date",
+        var headers = {"price": "Price", "baggage":"Baggage", "airline":"Airline", "tolerance" : "Tolerance", "departureDay" : "Departure day", "departureDate": "Departure date",
         "departureCity": "Departure city", "departureTime": "Departure time", "departureAirport":"Departure airport", "durationToDestination" : "Duration to destination",
         "destinationCity":"Destination city","destinationTime":"Destination time","destinationAirport":"Destination Airport", "url":"Url"};
 
