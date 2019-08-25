@@ -11,7 +11,7 @@ const pelikan = require('./Pelikan/Pelikan');
 
     try{
         
-        const browser = await puppeteer.launch({headless: config.headless, executablePath: config.chromePath});
+        const browser = await puppeteer.launch({headless: config.headless, executablePath: config.chromePath, args: ['--ignore-certificate-errors']});
         await kiwi.Search(logger, config, browser)
         await pelikan.Search(logger, config, browser)
 

@@ -128,9 +128,9 @@ async function ScrapePage(config, logger, page)
                     var results = {};
                     
                     results.price = price;
-                    results.baggage = await GetTextContent(logger, subNode, ".//div[@class='fly-item-bottom-info-left-new-reservation']")
-                    results.airline = await GetTextContent(logger, subNode, ".//div[@class='fly-item-bottom-info-right-new-reservation']")
-                    results.tolerance = await GetTextContent(logger, subNode, ".//div[@class='fly-item-tolerance-new-reservation']")
+                    results.baggage = await GetTextContent(logger, subNode, ".//div[@class='fly-item-bottom-info-left-new-reservation']");
+                    results.airline = await GetTextContent(logger, subNode, ".//div[@class='fly-item-bottom-info-right-new-reservation']");
+                    results.tolerance = await GetTextContent(logger, subNode, ".//div[@class='fly-item-tolerance-new-reservation']");
                     results.departureDay = await GetTextContent(logger, subNode, ".//span[@class='fly-item-day-new-reservation']");
                     results.departureDate = await GetTextContent(logger, subNode, ".//div[@class='fly-item-one-trip-no-radio-new-reservation']");
                     var tmpElement = await GetElement(logger, subNode, ".//div[@class='first-dest-item']");
@@ -162,6 +162,8 @@ async function ScrapePage(config, logger, page)
             {
                 logger.debug(error.stack);
             }
+
+            listResults.push(GetEmptyResults());
         }
     }
     catch(error)
@@ -252,4 +254,24 @@ function PrepareResults(config, logger, listResults)
 
 
     return tables;
+}
+
+function GetEmptyResults()
+{
+    var results = {};
+    results.price = "";
+    results.baggage = "";
+    results.airline = "";
+    results.tolerance = "";
+    results.departureDay = "";
+    results.departureDate = "";
+    results.departureCity = "";
+    results.departureTime = "";
+    results.departureAirport = "";
+    results.durationToDestination = "";
+    results.destinationCity = "";
+    results.destinationTime = "";
+    results.destinationAirport = "";
+    results.url = "";
+    return results;
 }

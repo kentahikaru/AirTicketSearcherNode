@@ -240,3 +240,20 @@ function showMemory(logger)
         logger.debug(`stdout: \n${stdout}`);
       }));
 }
+
+function GetEmptyResults()
+{
+    var results = {};
+    results.price = "";
+    results.lengthOfStay = "";
+    results.airlinesToDestination = "";
+    results.airlinesFromDestination = "";
+    results.durationToDestination = "";
+    results.durationFromDestination = "";
+    results.departureDate = "";
+    results.returnDate = "";
+    results.departureTime = "";
+    results.returnTime = "";
+    results.bookingLink = "";
+    return results;
+}
