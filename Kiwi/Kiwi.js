@@ -33,7 +33,7 @@ function MakeUrlList(config, logger)
             listUrls.push(url);
         }
 
-        currentDate.add(12,'M');
+        currentDate.add(1,'M');
     }while(currentDate < maxDate)
 
     return listUrls;
