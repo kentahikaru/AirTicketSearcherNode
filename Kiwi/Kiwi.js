@@ -33,7 +33,7 @@ function MakeUrlList(config, logger)
             listUrls.push(url);
         }
 
-        currentDate.add(1,'M');
+        currentDate.add(12,'M');
     }while(currentDate < maxDate)
 
     return listUrls;
@@ -70,15 +70,15 @@ async function ProcessUrls(config, logger, browser, listUrls)
             await page.setViewport({ width: 960, height: 926 });
             await page.goto(url);
 
-            await page.waitForXPath("//Button[contains(div,'Load More')]");
+            await page.waitForXPath("//Button[contains(div,'Load more')]");
             //await page.WaitForXPath("//[contains(div,'Journey-overview Journey-return')]");
 
-            await page.evaluate(() => { 
-                var elements = document.getElementsByClassName('Journey-overview Journey-return'); 
-                for (i = 0; i < elements.length; i++) { 
-                    elements[i].click(); 
-                } 
-            });
+            // await page.evaluate(() => { 
+            //     var elements = document.getElementsByClassName('Journey-overview Journey-return'); 
+            //     for (i = 0; i < elements.length; i++) { 
+            //         elements[i].click(); 
+            //     } 
+            // });
 
             var scrapedResults = await ScrapePage(config, logger, page);
             listOfResults.push(scrapedResults);
@@ -111,7 +111,8 @@ async function ScrapePage(config, logger, page)
     var listResults = [];
     try
     {
-        const elements = await page.$x('.//div[contains(@class,"Journey clear spCard open")]')
+        //const elements = await page.$x('.//div[contains(@class,"Journey clear spCard open")]')
+        const elements = await page.$x('//div[contains(@data-test,"ResultCardWrapper")]')
 
         if(elements.length == 0)
         {
@@ -122,13 +123,15 @@ async function ScrapePage(config, logger, page)
         {
             try
             {
-                var subnodes = await element.$x('.//div[@class="TripInfo _results"]');
+                var subnodes = await element.$x('.//div[contains(@class,"styles__ResultCardSection-sc")]');
                 var toDestination = subnodes[0];
                 var fromDestination = subnodes[1];
 
                 var results = {};
 
-                var price = await GetTextContent(logger, element, './/div[contains(@class,"JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2")]');
+                //var price = await GetTextContent(logger, element, './/div[contains(@class,"JourneyInfoStyles__JourneyInfoPrice-vpsxn5-2")]');
+                var price = await GetTextContent(logger, element, './/strong[contains(@class,"styles__PriceText-sc-1gektao-23")]');
+                
                 price = price.toString().split(" ")[0].replace(",",".").replace(".","");
 
                 if(price > config.maxPrice)
@@ -138,23 +141,33 @@ async function ScrapePage(config, logger, page)
 
                 results.price = price;
 
-                results.lengthOfStay = await GetTextContent(logger, element, './/div[@class="Journey-nights-place"]');
+                results.lengthOfStay = await GetTextContent(logger, element, './/div[contains(@class,"styles__TripLayoverTextBackground")]');
 
-                results.airlinesToDestination = await GetTextContent(logger, toDestination, ".//div[@class='AirlineNames']");
-                results.airlinesFromDestination = await GetTextContent(logger, fromDestination, ".//div[@class='AirlineNames']");
+                results.airlinesToDestination = await GetContent(logger, toDestination, './/div[contains(@class,"CarrierLogo__StyledCarrierLogo-d4doc9-1")]/img', 'title');
+                results.airlinesFromDestination = await GetContent(logger, fromDestination, './/div[contains(@class,"CarrierLogo__StyledCarrierLogo-d4doc9-1")]/img', 'title');
 
-                results.durationToDestination = await GetTextContent(logger, toDestination, ".//div[@class='TripInfoField-flight-duration']");
-                results.durationFromDestination = await GetTextContent(logger, fromDestination, ".//div[@class='TripInfoField-flight-duration']");
+                results.durationToDestination = await GetTextContent(logger, toDestination, './/div[contains(@class,"Badge__StyledBadgeContent-sc")]');
+                results.durationFromDestination = await GetTextContent(logger, fromDestination, './/div[contains(@class,"Badge__StyledBadgeContent-sc")]');
                 
-                results.departureDate = await GetTextContent(logger, toDestination, ".//div[@class='TripInfoField-date']");
-                results.returnDate = await GetTextContent(logger, fromDestination, ".//div[@class='TripInfoField-date']");
+                results.departureDate = await GetTextContent(logger, toDestination, './/p[contains(@class,"styles__DepartureDate-sc")]');
+                results.returnDate = await GetTextContent(logger, fromDestination, './/p[contains(@class,"styles__DepartureDate-sc")]');
            
-                results.departureTime = await GetTextContent(logger, toDestination, ".//div[@class='TripInfoField-time']");
-                results.returnTime = await GetTextContent(logger, fromDestination, ".//div[@class='TripInfoField-date']");
+                var toDestinationTime = await toDestination.$x('.//p[contains(@class,"Text__StyledText-sc-19qtt4y-0 eqpDiB")]');
+                var fromDestinationTime = await fromDestination.$x('.//p[contains(@class,"Text__StyledText-sc-19qtt4y-0 eqpDiB")]');
 
-                results.bookingLink = await GetContent(logger, element, ".//div[@class='JourneyBookingButtonLink']/a", "href");
+                results.departureTime = await GetTextContent(logger, toDestinationTime[0], '.');
+                results.returnTime = await GetTextContent(logger, fromDestinationTime[0], '.');
+
+                results.departureTimeArrival = await GetTextContent(logger, toDestinationTime[1], '.');
+                results.returnTimeArrival = await GetTextContent(logger, fromDestinationTime[1], '.');
+
+                // var baggage = await element.$x('.//div[contains(@data-test,"ResultCardBadges")]');
+                results.luggageWeight = await GetTextContent(logger, element, './/div[contains(@data-test,"ResultCardBadges")]/div[1]/div[2]/div[contains(@class,"Badge__StyledBadgeContent-sc-1y6i8f0-2 ljgksW")]');
+
+                results.bookingLink = await page.url(); //await GetContent(logger, element, ".//div[@class='JourneyBookingButtonLink']/a", "href");
 
                 listResults.push(results);
+                
             }
             catch(error)
             {
@@ -164,7 +177,8 @@ async function ScrapePage(config, logger, page)
     }
     catch(error)
     {
-        logger.debug('No elements on page.')
+        //logger.debug('No elements on page.')
+        logger.debug(error);
         await page.screenshot({ path: path.join(process.cwd(), './logs/kiwi-' + moment().format("YYYY-MM-DD_HH-mm-ss") + '.jpg') });
     }
 
@@ -203,6 +217,25 @@ async function GetContent(logger, element, xpath, content)
     }
 }
 
+async function GetProperties(logger,element, xpath)
+{
+    try
+    {
+        var xPathElement = await element.$x(xpath);
+        var properties = await xPathElement[0].getProperties();
+        for(const property of properties)
+        {
+            logger.debug(property);
+        }
+    }
+    catch(error)
+    {
+        logger.debug(xpath);
+        logger.debug(error.stack);
+        return "";
+    }
+}
+
 function PrepareResults(config, logger, listResults)
 {
     logger.debug("PrepareResults");
@@ -210,7 +243,7 @@ function PrepareResults(config, logger, listResults)
     try{
         var headers = {"price": "Price", "lengthOfStay" : "Length of stay", "airlinesToDestination" : "Airlines to destination", "airlinesFromDestination": "Airlines from destination",
         "durationToDestination": "Duration to destination", "durationFromDestination": "Duration from destination", "departureDate":"Departure date", "returnDate" : "Return Date",
-        "departureTime":"Departure time","returnTime":"Return time","bookingLink":"Booking link"};
+        "departureTime":"Departure time","departureTimeArrival":"Arrival Time to Destination","returnTime":"Return time","returnTimeArrival":"Arrival Time from Destination","luggageWeight":"Checked luggage weight","bookingLink":"Booking link"};
 
         for(var resultList of listResults)
         {
