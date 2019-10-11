@@ -1,0 +1,10 @@
+{
+    "smtpServer":"",
+    "port":"",
+    "username":"",
+    "password":"",
+    "fromName":"",
+    "fromAddress":"",
+    "toName":"",
+    "toAddress":""
+}
